@@ -1,220 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>AZ Player</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.min.js"></script>
+  <title>Smart IPTV</title>
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.6/dist/shaka-player.compiled.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      background-color: #111;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    h1 {
-      margin: 20px;
-      font-size: 2em;
-      color: #00ffff;
-    }
-
-    video {
-      width: 90%;
-      max-width: 800px;
-      border: 4px solid #00ffff;
-      border-radius: 16px;
-      box-shadow: 0 0 20px #00ffffaa;
-    }
-
-    footer {
-      margin: 20px;
-      color: #666;
-      font-size: 0.9em;
-    }
-
-    .sidebar {
-      width: 300px;
-      background-color: #222;
-      border-left: 2px solid #00ffff;
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-    }
-
-    .sidebar input {
-      padding: 8px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border: 1px solid #00ffff;
-      background-color: #111;
-      color: white;
-    }
-
-    .channel-list {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .channel-button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background-color: #333;
-      border: 1px solid #00ffff;
-      border-radius: 8px;
-      color: white;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .channel-button:hover {
-      background-color: #00ffff22;
-    }
+    body { background: #111; color: white; font-family: Arial; text-align: center; }
+    #video { width: 80%; height: 500px; border: 2px solid #00ffff; margin-top: 20px; }
+    select { margin-top: 20px; font-size: 18px; padding: 5px 10px; }
   </style>
 </head>
 <body>
-  <div class="main">
-    <h1>AZ Player</h1>
-    <video id="video" controls autoplay></video>
-    <footer>Powered by Shaka Player | ClearKey & Widevine DRM Supported</footer>
-  </div>
-
-  <div class="sidebar">
-    <input type="text" id="search" placeholder="Search channel...">
-    <div class="channel-list" id="channelList"></div>
-  </div>
+  <h1>AZ IPTV</h1>
+  <select id="channel">
+    <option value="gma">GMA 7 (via Worker)</option>
+    <option value="crave1">Crave 1 (ClearKey)</option>
+  </select>
+  <video id="video" autoplay controls></video>
 
   <script>
+    const player = new shaka.Player(document.getElementById('video'));
+
     const channels = {
       gma: {
-        name: 'GMA 7 (Widevine)',
-        type: 'widevine',
-        manifestUri: 'http://143.44.136.110:6910/001/2/ch00000090990000001093/manifest.mpd?virtualDomain=001.live_hls.zte.com',
-        licenseServerUri: 'http://143.44.136.74:9443/widevine/?deviceId=02:00:00:00:00:00'
-      },
-      hbo: {
-        name: 'HBO (Widevine)',
-        type: 'widevine',
-        manifestUri: 'http://143.44.136.110:6910/001/2/ch00000090990000001065/manifest.mpd?virtualDomain=001.live_hls.zte.com',
-        licenseServerUri: 'http://143.44.136.74:9443/widevine/?deviceId=02:00:00:00:00:00'
+        manifestUri: 'https://shiny-recipe-55cd.aizenzazel00.workers.dev',
+        drm: {
+          servers: {
+            'com.widevine.alpha': 'http://143.44.136.74:9443/widevine/?deviceId=02:00:00:00:00:00'
+          }
+        }
       },
       crave1: {
-        name: 'Crave 1 (ClearKey)',
-        type: 'clearkey',
         manifestUri: 'https://live-crave.video.9c9media.com/137c6e2e72e1bf67b82614c7c9b216d6f3a8c8281748505659713/fe/f/crave/crave1/manifest.mpd',
-        keyId: '4a107945066f45a9af2c32ea88be60f4',
-        key: 'df97e849d68479ec16e395feda7627d0'
-      },
-      crave2: {
-        name: 'Crave 2 (ClearKey)',
-        type: 'clearkey',
-        manifestUri: 'https://live-crave.video.9c9media.com/ab4332c60e19b6629129eeb38a2a6ac6db5df2571721750022187/fe/f/crave/crave2/manifest.mpd',
-        keyId: '4ac6eaaf0e5e4f94987cbb5b243b54e8',
-        key: '8bb3f2f421f6afd025fa46c784944ad6'
-      },
-      rockaction: {
-        name: 'Korean Blockbuster (ClearKey)',
-        type: 'clearkey',
-        manifestUri: 'https://aba2opzaaaaaaaambptdxcmdygr3l.9be0b55c226b4023a71eca813144822a.emt.cf.ww.aiv-cdn.net/pdx-nitro/live/clients/dash/enc/ol6pl6uagx/out/v1/92163be177b542c59d3b804d8c9dbee2/cenc.mpd',
-        keyId: '94bc19ad9cb04a7e6871e650a7f6529c',
-        key: '83e7dc469eb303c4237db6750225f6be'
+        drm: {
+          clearKeys: {
+            '4a107945066f45a9af2c32ea88be60f4': 'df97e849d68479ec16e395feda7627d0'
+          }
+        }
       }
     };
 
-    let player;
-
-    shaka.polyfill.installAll();
-
-    if (shaka.Player.isBrowserSupported()) {
-      initPlayer();
-    } else {
-      alert('Browser not supported!');
-    }
-
-    function initPlayer() {
-      const video = document.getElementById('video');
-      player = new shaka.Player(video);
-      player.addEventListener('error', onErrorEvent);
-
-      renderChannelButtons();
-      loadChannel('gma'); // Auto-load default
-    }
-
-    function renderChannelButtons(filter = '') {
-      const list = document.getElementById('channelList');
-      list.innerHTML = '';
-
-      Object.entries(channels).forEach(([key, channel]) => {
-        if (channel.name.toLowerCase().includes(filter.toLowerCase())) {
-          const btn = document.createElement('button');
-          btn.textContent = channel.name;
-          btn.className = 'channel-button';
-          btn.onclick = () => loadChannel(key);
-          list.appendChild(btn);
-        }
-      });
-    }
-
-    async function loadChannel(channelKey) {
-      const channel = channels[channelKey];
-      if (!channel) return;
-
+    async function loadChannel(key) {
+      const cfg = channels[key];
+      player.configure({ drm: cfg.drm });
       try {
-        if (player) await player.destroy();
-
-        const video = document.getElementById('video');
-        player = new shaka.Player(video);
-        player.addEventListener('error', onErrorEvent);
-
-        if (channel.type === 'clearkey') {
-          player.configure({
-            drm: {
-              clearKeys: {
-                [channel.keyId]: channel.key
-              }
-            }
-          });
-        } else if (channel.type === 'widevine') {
-          player.configure({
-            drm: {
-              servers: {
-                'com.widevine.alpha': channel.licenseServerUri
-              }
-            }
-          });
-        }
-
-        await player.load(channel.manifestUri);
-        console.log(`Now playing: ${channel.name}`);
-      } catch (error) {
-        onError(error);
+        await player.load(cfg.manifestUri);
+        console.log('Playing:', key);
+      } catch (e) {
+        console.error('Error loading', key, e);
+        alert('Error loading stream: ' + key);
       }
     }
 
-    function onErrorEvent(event) {
-      onError(event.detail);
-    }
-
-    function onError(error) {
-      console.error('Error code', error.code, 'object', error);
-      alert('Playback error: ' + error.message);
-    }
-
-    document.getElementById('search').addEventListener('input', function () {
-      renderChannelButtons(this.value);
+    document.getElementById('channel').addEventListener('change', e => {
+      loadChannel(e.target.value);
     });
+
+    shaka.polyfill.installAll();
+    loadChannel('gma');
   </script>
 </body>
 </html>
